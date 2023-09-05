@@ -1,5 +1,6 @@
 package com.gs.service;
 
+import com.gs.schemas.global.entity.Info;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
@@ -26,6 +27,34 @@ public class DynamicMongoClientService {
     public DynamicMongoClientService() {
     }
 
+    public MongoProperties getMongoPropertiesFromInfo(Info info) {
+        try {
+            if (info == null) {
+                log.error("Info Object null so mongoTemplate null:{}", info);
+                return null;
+            }
+            MongoProperties mongoProperties = new MongoProperties();
+            mongoProperties.setUsername(info.getUser());
+            mongoProperties.setPassword(info.getPassword().toCharArray());
+            mongoProperties.setHost(info.getHost());
+            mongoProperties.setDatabase(info.getDatabase());
+            mongoProperties.setAuthenticationDatabase(info.getAuth_db());
+            mongoProperties.setPort(info.getPort());
+            return mongoProperties;
+        } catch (Exception e) {
+            log.error("Error in MongoPropertiese setter from info");
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public void setMongoProperties(MongoProperties mongoProperties)
+    {
+        this.mongoProperties = mongoProperties;
+        generateDynamicMongoClient();
+        generateDynamicMongoFactory();
+        generateDynamicMongoTemplate();
+        // if you are setting externally call other functions to set fields according to this
+    }
     public void generateDynamicMongoClient() {
         if(mongoProperties==null)
             log.error("Please set MongoProperties");
@@ -54,14 +83,6 @@ public class DynamicMongoClientService {
         mongoTemplate = new MongoTemplate(mongoDatabaseFactory);
     }
 
-    public void setMongoProperties(MongoProperties mongoProperties)
-    {
-        this.mongoProperties = mongoProperties;
-        generateDynamicMongoClient();
-        generateDynamicMongoFactory();
-        generateDynamicMongoTemplate();
-        // if you are setting externally call other functions to set fields according to this
-    }
     public MongoProperties getMongoProperties() {
         return mongoProperties;
     }

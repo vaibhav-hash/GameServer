@@ -1,5 +1,8 @@
 package com.gs.controller;
 
+import com.gs.schemas.global.entity.Info;
+import com.gs.schemas.global.repo.InfoMongoRepository;
+import com.gs.service.DocumentRetrieverService;
 import com.gs.service.DynamicMongoClientService;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
@@ -23,53 +26,22 @@ public class Temp {
 
     @Autowired
     DynamicMongoClientService dynamicMongoClientService;
+    @Autowired
+    InfoMongoRepository infoMongoRepository;
+    @Autowired
+    DocumentRetrieverService documentRetrieverService;
 
     @GetMapping("/test")
     public void justWorkCustom() {
         log.info("Inside the Test Api");
-        MongoProperties mongoProperties = new MongoProperties();
-        mongoProperties.setHost("localhost");
-        mongoProperties.setPort(27017);
-        mongoProperties.setPassword("password".toCharArray());
-        mongoProperties.setUsername("root");
-        mongoProperties.setDatabase("game");
-        mongoProperties.setAuthenticationDatabase("admin");
+        Info info=infoMongoRepository.findAll().get(0);
+        log.info("info is:{}",info);
+        MongoProperties mongoProperties=dynamicMongoClientService.getMongoPropertiesFromInfo(info);
         dynamicMongoClientService.setMongoProperties(mongoProperties);
-        MongoDatabaseFactory mongoDatabaseFactory = dynamicMongoClientService.getMongoDatabaseFactory();
-        log.info("Collection names in mongo db:{}", mongoDatabaseFactory.getMongoDatabase().listCollectionNames());
-        getDocumentsFromCollections("game_items", "game_purchase_history");
+        documentRetrieverService.getDocumentsFromCollections(dynamicMongoClientService.getMongoTemplate(),"temp_info");
     }
 
-    public Iterable<Document> getDocumentsFromCollectionsWithQuery(String collectionName, BasicDBObject query) {
-        MongoDatabase database = dynamicMongoClientService.getMongoTemplate().getDb();
-        MongoCollection<Document> collection = database.getCollection(collectionName);
-        List<Document> results = new ArrayList<>();
 
-        try (MongoCursor<Document> cursor = collection.find(query).iterator()) {
-            while (cursor.hasNext()) {
-                results.add(cursor.next());
-            }
-        }
-        log.info("Hello The Results are");
-        return results;
-    }
-
-    public Iterable<Document> getDocumentsFromCollections(String... collectionNames) {
-        MongoDatabase database = dynamicMongoClientService.getMongoTemplate().getDb();
-        // Create an empty list to store query results
-        List<Document> results = new ArrayList<>();
-
-        for (String collectionName : collectionNames) {
-            MongoCollection<Document> collection = database.getCollection(collectionName);
-
-            try (MongoCursor<Document> cursor = collection.find().iterator()) {
-                while (cursor.hasNext()) {
-                    results.add(cursor.next());
-                }
-            }
-        }
-        log.info("Hello The Results are:{}", results);
-        return results;
         /*db.grantRolesToUser(
    "root",
    [ "readWrite" ,{ role: "readWrite", db: "game" },
@@ -78,5 +50,15 @@ public class Temp {
       { role: "readWrite", db: "temp" } ],
    { w: "majority" , wtimeout: 4000 }
 )*/
-    }
+//        [{
+//            "_id": {
+//                "$oid": "64f5a8df3a961905303f764b"
+//            },
+//            "auth_db": "admin",
+//                    "database": "global_games",
+//                    "host": "localhost",
+//                    "password": "password",
+//                    "port": 27017,
+//                    "user": "root"
+//        }]
 }

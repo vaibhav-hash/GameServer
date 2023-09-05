@@ -12,13 +12,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import static java.util.Collections.singletonList;
 
 @Configuration
-@EnableMongoRepositories(basePackages = "com.gs.schemas.global", mongoTemplateRef = "mongoTemplateGlobal")
+@EnableMongoRepositories(basePackages = "com.gs.schemas.global", mongoTemplateRef = "globalMongoTemplate")
 public class GlobalSchemaConfiguration {
     MongoProperties mongoProperties;
     @Bean(name = "globalMongoProperties")
@@ -48,6 +49,12 @@ public class GlobalSchemaConfiguration {
             @Qualifier("globalMongoClient") MongoClient mongoClient,
             @Qualifier("globalMongoProperties") MongoProperties mongoProperties) {
         return new SimpleMongoClientDatabaseFactory(mongoClient, mongoProperties.getDatabase());
+    }
+
+    @Primary
+    @Bean(name="globalMongoTemplate")
+    public MongoTemplate globalMongoTemplate(@Qualifier("globalMongoDBFactory") MongoDatabaseFactory globalMongoDbFactory) {
+        return new MongoTemplate(globalMongoDbFactory);
     }
 
 }
