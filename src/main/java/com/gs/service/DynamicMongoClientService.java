@@ -19,11 +19,6 @@ import static java.util.Collections.singletonList;
 @Slf4j
 public class DynamicMongoClientService {
 
-    MongoProperties mongoProperties;
-    MongoClient mongoClient;
-    MongoDatabaseFactory mongoDatabaseFactory;
-    MongoTemplate mongoTemplate;
-
     public DynamicMongoClientService() {
     }
 
@@ -47,15 +42,14 @@ public class DynamicMongoClientService {
         }
         return null;
     }
-    public void setMongoProperties(MongoProperties mongoProperties)
+    public MongoTemplate getMongoTemplateFromMongoProperties(MongoProperties mongoProperties)
     {
-        this.mongoProperties = mongoProperties;
-        generateDynamicMongoClient();
-        generateDynamicMongoFactory();
-        generateDynamicMongoTemplate();
-        // if you are setting externally call other functions to set fields according to this
+        MongoClient mongoClient=generateDynamicMongoClient(mongoProperties);
+        MongoDatabaseFactory mongoDatabaseFactory=generateDynamicMongoFactory(mongoClient,mongoProperties);
+        MongoTemplate mongoTemplate=generateDynamicMongoTemplate(mongoDatabaseFactory);
+        return mongoTemplate;
     }
-    public void generateDynamicMongoClient() {
+    public MongoClient generateDynamicMongoClient(MongoProperties mongoProperties) {
         if(mongoProperties==null)
             log.error("Please set MongoProperties");
         MongoCredential credential = MongoCredential
@@ -63,7 +57,7 @@ public class DynamicMongoClientService {
                         mongoProperties.getAuthenticationDatabase(),
                         mongoProperties.getPassword());
 
-        mongoClient = MongoClients.create(MongoClientSettings.builder()
+        return MongoClients.create(MongoClientSettings.builder()
                 .applyToClusterSettings(builder -> builder
                         .hosts(singletonList(new ServerAddress(mongoProperties.getHost(),
                                 mongoProperties.getPort()))))
@@ -71,31 +65,15 @@ public class DynamicMongoClientService {
                 .build());
     }
 
-    public void generateDynamicMongoFactory() {
+    public MongoDatabaseFactory generateDynamicMongoFactory(MongoClient mongoClient,MongoProperties mongoProperties) {
         if(mongoClient==null)
-            generateDynamicMongoClient();
-        this.mongoDatabaseFactory = new SimpleMongoClientDatabaseFactory(mongoClient, mongoProperties.getDatabase());
+            log.error("Please generate mongoClient");
+        return new SimpleMongoClientDatabaseFactory(mongoClient, mongoProperties.getDatabase());
     }
 
-    public void generateDynamicMongoTemplate() {
+    public MongoTemplate generateDynamicMongoTemplate(MongoDatabaseFactory mongoDatabaseFactory) {
             if(mongoDatabaseFactory==null)
-                generateDynamicMongoFactory();
-        mongoTemplate = new MongoTemplate(mongoDatabaseFactory);
-    }
-
-    public MongoProperties getMongoProperties() {
-        return mongoProperties;
-    }
-
-    public MongoClient getMongoClient() {
-        return mongoClient;
-    }
-
-    public MongoDatabaseFactory getMongoDatabaseFactory() {
-        return mongoDatabaseFactory;
-    }
-
-    public MongoTemplate getMongoTemplate() {
-        return mongoTemplate;
+                log.error("Pleas generate MongoDb factory or call setMongoproperties function");
+        return new MongoTemplate(mongoDatabaseFactory);
     }
 }

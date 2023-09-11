@@ -37,28 +37,8 @@ public class Temp {
         Info info=infoMongoRepository.findAll().get(0);
         log.info("info is:{}",info);
         MongoProperties mongoProperties=dynamicMongoClientService.getMongoPropertiesFromInfo(info);
-        dynamicMongoClientService.setMongoProperties(mongoProperties);
-        documentRetrieverService.getDocumentsFromCollections(dynamicMongoClientService.getMongoTemplate(),"temp_info");
+        MongoTemplate mongoTemplate=dynamicMongoClientService.getMongoTemplateFromMongoProperties(mongoProperties);
+        documentRetrieverService.getDocumentsFromCollections(mongoTemplate,"temp_info");
     }
 
-
-        /*db.grantRolesToUser(
-   "root",
-   [ "readWrite" ,{ role: "readWrite", db: "game" },
-      { role: "readWrite", db: "global_games" },
-      { role: "readWrite", db: "global" },
-      { role: "readWrite", db: "temp" } ],
-   { w: "majority" , wtimeout: 4000 }
-)*/
-//        [{
-//            "_id": {
-//                "$oid": "64f5a8df3a961905303f764b"
-//            },
-//            "auth_db": "admin",
-//                    "database": "global_games",
-//                    "host": "localhost",
-//                    "password": "password",
-//                    "port": 27017,
-//                    "user": "root"
-//        }]
 }
